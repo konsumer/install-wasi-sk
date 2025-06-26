@@ -70,7 +70,7 @@ detect_platform() {
 
 # Get the latest version from GitHub API
 get_latest_version() {
-    log_info "Fetching latest WASI SDK version from GitHub..."
+    log_info "Fetching latest WASI SDK version from GitHub..." >&2
     
     local api_url="https://api.github.com/repos/WebAssembly/wasi-sdk/releases/latest"
     local latest_tag
@@ -80,12 +80,12 @@ get_latest_version() {
     elif command -v wget >/dev/null 2>&1; then
         latest_tag=$(wget -qO- "$api_url" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
     else
-        log_error "Neither curl nor wget is available"
+        log_error "Neither curl nor wget is available" >&2
         exit 1
     fi
     
     if [[ -z "$latest_tag" ]]; then
-        log_error "Failed to fetch latest version"
+        log_error "Failed to fetch latest version" >&2
         exit 1
     fi
     
