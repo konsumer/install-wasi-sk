@@ -1,0 +1,166 @@
+name: Test WASI SDK Action
+
+on:
+  push:
+    branches:
+      [
+        main,
+        develop,
+      ]
+  pull_request:
+    branches:
+      [
+        main,
+      ]
+
+jobs:
+  test-basic:
+    name: Test Basic Installation
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          [
+            ubuntu-latest,
+            macos-latest,
+            windows-latest,
+          ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test WASI SDK Installation
+        id: wasi-sdk
+        uses: ./
+        with:
+          version: 'latest'
+
+      - name: Verify Installation
+        shell: bash
+        run:
+          |
+          echo "WASI SDK Path: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
+          echo "WASI SDK Version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
+          echo "Clang Path: ${{ steps.wasi-sdk.outputs.clang-path }}"
+          echo "Sysroot Path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
+
+          # Test that clang is available
+          clang --version
+
+          # Test environment variables
+          echo "WASI_SDK_PATH: $WASI_SDK_PATH"
+          echo "CC: $CC"
+          echo "CXX: $CXX"
+
+  test-versions:
+    name: Test Multiple Versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version:
+          [
+            '23',
+            '24',
+            '25',
+          ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test WASI SDK Installation
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Verify Installation
+        run:
+          |
+          clang --version
+          echo "Testing version ${{ matrix.version }}"
+
+  test-build:
+    name: Test Building WebAssembly
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install WASI SDK
+        uses: ./
+        with:
+          version: '25'
+
+      - name: Create test C program
+        run:
+          |
+          cat > hello.c << 'EOF'
+          #include <stdio.h>
+
+          int main() {
+              printf("Hello, WebAssembly!\n");
+              return 0;
+          }
+          EOF
+
+      - name: Build WebAssembly module
+        run:
+          |
+          clang hello.c -o hello.wasm
+          ls -la hello.wasm
+
+      - name: Install Wasmtime
+        run:
+          |
+          curl https://wasmtime.dev/install.sh -sSf | bash
+          echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+
+      - name: Test WebAssembly module
+        run:
+          |
+          wasmtime hello.wasm
+
+  test-cmake:
+    name: Test CMake Integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install WASI SDK
+        uses: ./
+        with:
+          version: '25'
+
+      - name: Create CMake project
+        run:
+          |
+          mkdir cmake-test
+          cd cmake-test
+
+          cat > CMakeLists.txt << 'EOF'
+          cmake_minimum_required(VERSION 3.16)
+          project(HelloWasm C)
+
+          add_executable(hello hello.c)
+          EOF
+
+          cat > hello.c << 'EOF'
+          #include <stdio.h>
+
+          int main() {
+              printf("Hello from CMake + WASI!\n");
+              return 0;
+          }
+          EOF
+
+      - name: Build with CMake
+        run:
+          |
+          cd cmake-test
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake
+          cmake --build build
+          ls -la build/hello

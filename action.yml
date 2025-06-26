@@ -1,0 +1,45 @@
+name: 'Install WASI SDK'
+description: 'Install the WASI SDK toolchain for WebAssembly development'
+branding:
+  icon: 'download'
+  color: 'blue'
+
+inputs:
+  version:
+    description: 'WASI SDK version to install (e.g., "25", "24", "23")'
+    required: false
+    default: 'latest'
+  install-path:
+    description: 'Directory to install WASI SDK to'
+    required: false
+    default: '/opt/wasi-sdk'
+  add-to-path:
+    description: 'Add WASI SDK bin directory to PATH'
+    required: false
+    default: 'true'
+
+outputs:
+  wasi-sdk-path:
+    description: 'Path to the installed WASI SDK'
+    value: ${{ steps.install.outputs.wasi-sdk-path }}
+  wasi-sdk-version:
+    description: 'Version of WASI SDK that was installed'
+    value: ${{ steps.install.outputs.wasi-sdk-version }}
+  clang-path:
+    description: 'Path to the clang executable'
+    value: ${{ steps.install.outputs.clang-path }}
+  sysroot-path:
+    description: 'Path to the WASI sysroot'
+    value: ${{ steps.install.outputs.sysroot-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install WASI SDK
+      id: install
+      shell: bash
+      run: ${{ github.action_path }}/install.sh
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_INSTALL_PATH: ${{ inputs.install-path }}
+        INPUT_ADD_TO_PATH: ${{ inputs.add-to-path }}
