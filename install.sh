@@ -64,7 +64,8 @@ detect_platform() {
             ;;
     esac
     
-    echo "${os}-${arch}"
+    # Return in the format: arch-os (as expected by WASI SDK releases)
+    echo "${arch}-${os}"
 }
 
 # Get the latest version from GitHub API
