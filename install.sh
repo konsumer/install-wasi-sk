@@ -30,26 +30,9 @@ VERSION="${INPUT_VERSION:-latest}"
 INSTALL_PATH="${INPUT_INSTALL_PATH:-/opt/wasi-sdk}"
 ADD_TO_PATH="${INPUT_ADD_TO_PATH:-true}"
 
-# Detect OS and architecture
+# Detect architecture (Linux only)
 detect_platform() {
-    local os=""
     local arch=""
-    
-    case "$(uname -s)" in
-        Linux*)
-            os="linux"
-            ;;
-        Darwin*)
-            os="macos"
-            ;;
-        MINGW*|MSYS*|CYGWIN*)
-            os="mingw"
-            ;;
-        *)
-            log_error "Unsupported operating system: $(uname -s)"
-            exit 1
-            ;;
-    esac
     
     case "$(uname -m)" in
         x86_64|amd64)
@@ -64,8 +47,8 @@ detect_platform() {
             ;;
     esac
     
-    # Return in the format: arch-os (as expected by WASI SDK releases)
-    echo "${arch}-${os}"
+    # Return in the format: arch-linux (as expected by WASI SDK releases)
+    echo "${arch}-linux"
 }
 
 # Get the latest version from GitHub API

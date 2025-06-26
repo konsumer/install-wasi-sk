@@ -4,14 +4,22 @@ This is a custom GitHub Action for use in your workflows that will install the [
 
 ## Features
 
-- ✅ Supports all major platforms (Linux, macOS, Windows)
+- ✅ **Linux-focused**: Runs on Ubuntu/Linux runners (WebAssembly output is cross-platform)
 - ✅ Supports multiple architectures (x86_64, arm64)
-- ✅ Automatically detects platform and architecture
 - ✅ Downloads and installs the specified version of WASI SDK
 - ✅ Optionally adds WASI SDK to PATH
 - ✅ Sets up convenient environment variables
 - ✅ Provides output variables for use in subsequent steps
 - ✅ Comprehensive error handling and logging
+
+## Why Linux Only?
+
+WASI SDK compiles C/C++ code to WebAssembly, which is completely cross-platform. There's no need to install WASI SDK on multiple platforms - you can compile your WebAssembly modules on Linux and run them anywhere. This approach:
+
+- Simplifies CI/CD pipelines
+- Reduces complexity and potential issues
+- Leverages Linux's excellent toolchain support
+- Produces identical WebAssembly output regardless of build platform
 
 ## Usage
 
@@ -103,15 +111,16 @@ When `add-to-path` is `true`, the action sets up the following environment varia
 
 ## Platform Support
 
-This action supports the following platforms:
+This action only supports Linux runners, since WebAssembly output is cross-platform:
 
-| OS      | Architecture          | Support |
-| ------- | --------------------- | ------- |
-| Linux   | x86_64                | ✅      |
-| Linux   | arm64                 | ✅      |
-| macOS   | x86_64                | ✅      |
-| macOS   | arm64 (Apple Silicon) | ✅      |
-| Windows | x86_64                | ✅      |
+| OS      | Architecture | Support | Notes                    |
+| ------- | ------------ | ------- | ------------------------ |
+| Linux   | x86_64       | ✅      | Recommended              |
+| Linux   | arm64        | ✅      | Supported                |
+| macOS   | Any          | ❌      | Use Linux runner instead |
+| Windows | Any          | ❌      | Use Linux runner instead |
+
+**Recommendation**: Use `runs-on: ubuntu-latest` for your workflows that need WASI SDK.
 
 ## Version Support
 
@@ -201,7 +210,7 @@ steps:
 
 1. **Download fails**: Check if the specified version exists on the [releases page](https://github.com/WebAssembly/wasi-sdk/releases)
 2. **Permission denied**: Make sure the runner has write permissions to the install path
-3. **Platform not supported**: Verify your runner OS and architecture are supported
+3. **Platform not supported**: This action only supports Linux runners. Use `runs-on: ubuntu-latest`
 
 ### Debug Information
 
